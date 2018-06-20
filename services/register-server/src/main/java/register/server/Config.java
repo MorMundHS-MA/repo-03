@@ -9,8 +9,8 @@ import java.util.Map;
 
 public enum Config {
     baseURI("http://0.0.0.0:5002/"),
-    mongoURI("mongodb://141.19.142.57:27017"),
-    loginURI("http://141.19.142.57:5001/"),
+    mongoURI("mongodb://mongo:27017"),
+    loginURI("http://login-server:5001/"),
     dbName("benutzer"),
     dbAccountCollection("account"),
     corsAllowOrigin("*");

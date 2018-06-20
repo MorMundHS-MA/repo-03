@@ -1,0 +1,34 @@
+version: '3'
+services:
+  web:
+    image: nginx:1-alpine
+    volumes:
+    - './website/:/usr/share/nginx/html:ro'
+    ports:
+    - "8080:80"
+  register-server:
+    build: services/register-server/
+    ports:
+    - "5002:5002"
+    links:
+    - mongo
+  login-server:
+    build: services/login-server/
+    ports:
+    - "5001:5001"
+    links:
+    - mongo
+  chat-server:
+    build: services/chat-server/
+    ports:
+    - '5000:5000'
+    links:
+    - mongo
+  mongo:
+    image: mongo:latest
+    ports:
+    - "27017:27017"
+    volumes:
+    - 'mongo:/data/db'
+volumes:
+  mongo:

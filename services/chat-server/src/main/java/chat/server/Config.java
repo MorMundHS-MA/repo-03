@@ -9,11 +9,11 @@ import java.util.Map;
 
 public enum Config {
     baseURI("http://0.0.0.0:5000/"),
-    mongoURI("mongodb://141.19.142.57:27017"),
+    mongoURI("mongodb://mongo:27017"),
     dbName("benutzer"),
     dbChatCollection("chats"),
     dbSequenceCollection("sequence"),
-    loginURI("http://141.19.142.57:5001"),
+    loginURI("http://login-server:5001"),
     corsAllowOrigin("*"),
     useAuthCache("true");
 

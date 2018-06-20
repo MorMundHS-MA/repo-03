@@ -9,9 +9,9 @@ function loadConfig() {
         ipChat = localStorage.ipChat;
         ipRegister = localStorage.ipRegister;
     } else {
-        ipLogin = "http://141.19.142.57:5001";
-        ipChat = "http://141.19.142.57:5000";
-        ipRegister = "http://141.19.142.57:5002";
+        ipLogin = "http://localhost:5001";
+        ipChat = "http://localhost:5000";
+        ipRegister = "http://localhost:5002";
     }
     $("#inputIpLogin").val(ipLogin);
     $("#inputIpChat").val(ipChat);

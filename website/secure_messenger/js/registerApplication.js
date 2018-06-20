@@ -33,6 +33,7 @@ function checkPw() {
 	}
 	var URL = ipRegister + "/register";
 	var dataObject = { 'pseudonym': $("#inputPseudonym").val(), 'user': $("#inputEmail").val(), 'password': pw1 };
+
 	$.ajax({
 		url: URL,
 		type: 'PUT',
@@ -46,12 +47,12 @@ function checkPw() {
 			if(xhr.status==418){
 				$("#error").html("Diesen Benutzer gibt es schon");
 			}
-
-
-
-
+			else {
+				$("#error").html("Unerwarteter Fehler versuchs nochmal!");
+			}
 		}
 	});
+
 	return false;
 }
 

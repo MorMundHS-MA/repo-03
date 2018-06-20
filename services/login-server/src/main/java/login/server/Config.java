@@ -9,7 +9,7 @@ import java.util.Map;
 
 public enum Config {
     baseURI("http://0.0.0.0:5001/"),
-    mongoURI("mongodb://141.19.142.57:27017"),
+    mongoURI("mongodb://mongo:27017"),
     dbName("benutzer"),
     dbAccountCollection("account"),
     tokenDuration(Integer.toString(30 * 60)),
