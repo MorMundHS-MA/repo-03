@@ -3,20 +3,26 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>register-server</groupId>
     <artifactId>register-server</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+    <parent>
+        <groupId>de.hs_mannheim.int.team3</groupId>
+        <artifactId>secure-messenger</artifactId>
+        <version>1.0.0</version>
+    </parent>
     <name>Registration Server</name>
     <description>Registration and Profile Server</description>
     <url>http://www.informatik.hs-mannheim.de</url>
     <dependencies>
         <dependency>
-            <groupId>services</groupId>
+            <groupId>de.hs_mannheim.int.team3</groupId>
             <artifactId>common</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>1.0.0</version>
         </dependency>
         <dependency>
-            <groupId>login-server</groupId>
+            <groupId>de.hs_mannheim.int.team3</groupId>
             <artifactId>login-server</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>1.0.0</version>
             <scope>test</scope>
         </dependency>
         <!-- https://mvnrepository.com/artifact/junit/junit -->
@@ -133,6 +139,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.1.0</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -143,6 +150,15 @@
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>standalone</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

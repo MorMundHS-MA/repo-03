@@ -1,10 +1,1 @@
-# Package Files #
-*.jar
-*.war
-*.ear
-*.zip
-*.tar.gz
-*.rar
-
-# Binaries #
-*.class
+target/

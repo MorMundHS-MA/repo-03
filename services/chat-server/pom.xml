@@ -1,91 +1,85 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>chat-server</groupId>
+    <groupId>de.hs_mannheim.int.team3</groupId>
     <artifactId>chat-server</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+    <parent>
+        <groupId>de.hs_mannheim.int.team3</groupId>
+        <artifactId>secure-messenger</artifactId>
+        <version>1.0.0</version>
+    </parent>
     <name>Chat Server</name>
     <url>http://www.informatik.hs-mannheim.de</url>
     <dependencies>
         <dependency>
-            <groupId>services</groupId>
+            <groupId>de.hs_mannheim.int.team3</groupId>
             <artifactId>common</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>1.0.0</version>
         </dependency>
         <dependency>
-            <groupId>login-server</groupId>
+            <groupId>de.hs_mannheim.int.team3</groupId>
             <artifactId>login-server</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>1.0.0</version>
             <scope>test</scope>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/junit/junit -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.12</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/org.json/json -->
+        </dependency>        
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
             <version>20160810</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/javax.ws.rs/jsr311-api -->
+        </dependency>        
         <dependency>
             <groupId>javax.ws.rs</groupId>
             <artifactId>jsr311-api</artifactId>
             <version>1.1.1</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/com.sun.jersey/jersey-client -->
+        </dependency>        
         <dependency>
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-client</artifactId>
             <version>1.19.1</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/com.sun.jersey/jersey-core -->
+        </dependency>        
         <dependency>
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-core</artifactId>
             <version>1.19.1</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/com.sun.grizzly/grizzly-servlet-webserver -->
+        </dependency>        
         <dependency>
             <groupId>com.sun.grizzly</groupId>
             <artifactId>grizzly-servlet-webserver</artifactId>
             <version>1.9.65</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/com.sun.jersey/jersey-grizzly -->
+        </dependency>        
         <dependency>
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-grizzly</artifactId>
             <version>1.19.1</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/com.sun.jersey/jersey-servlet -->
+        </dependency>        
         <dependency>
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-servlet</artifactId>
             <version>1.19.1</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/com.sun.jersey/jersey-json -->
+        </dependency>        
         <dependency>
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-json</artifactId>
             <version>1.19.1</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/com.sun.jersey/jersey-server -->
+        </dependency>        
         <dependency>
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-server</artifactId>
             <version>1.19.1</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/io.rest-assured/rest-assured -->
+        </dependency>        
         <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
             <version>3.0.3</version>
             <scope>test</scope>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/org.mongodb/mongo-java-driver -->
+        </dependency>        
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongo-java-driver</artifactId>
@@ -109,6 +103,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.1.0</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -119,6 +114,15 @@
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>standalone</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
