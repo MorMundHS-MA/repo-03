@@ -12,12 +12,14 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import com.mongodb.MongoClientURI;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.sun.grizzly.http.SelectorThread;
 import com.sun.jersey.api.container.grizzly.GrizzlyWebContainerFactory;
 import services.common.StorageException;
+import services.common.StorageProviderCoreMongoDB;
 
 @Path("/")
 public class Service {
@@ -26,7 +28,9 @@ public class Service {
     /**
      * String for date parsing in ISO 8601 format.
      */
-    public static final String ISO8601 = "yyyy-MM-dd'T'HH:mm:ssZ";
+    static final String ISO8601 = "yyyy-MM-dd'T'HH:mm:ssZ";
+
+    private static StorageProviderMongoDB provider;
 
     public static void main(String[] args) throws Exception {
         try {
@@ -37,12 +41,9 @@ public class Service {
             System.exit(-1);
         }
 
-        try {
-            StorageProviderMongoDB.init();
-        } catch (StorageException e) {
-            System.out.println("Storage provider already initialized.");
-        }
-        startLoginServer(Config.getSettingValue(Config.baseURI));
+        provider = new StorageProviderMongoDB(new MongoClientURI(Config.mongoURI.value()), Config.dbName.value());
+
+        startLoginServer(Config.baseURI.value());
     }
 
     public static void startLoginServer(String uri) {
@@ -106,7 +107,7 @@ public class Service {
                         .build();
             }
 
-            User user = StorageProviderMongoDB.retrieveUser(userName, pseudonym);
+            User user = provider.retrieveUser(userName, pseudonym);
             if (user != null && user.VerifyPassword(password)) {
                 JSONObject obj = new JSONObject();
                 user.GenerateToken();
@@ -127,7 +128,7 @@ public class Service {
                 SimpleDateFormat sdf = new SimpleDateFormat(Service.ISO8601);
                 Calendar expireDate = user.GetTokenExpireDate();
                 sdf.setTimeZone(expireDate.getTimeZone());
-                StorageProviderMongoDB.saveToken(user.GetToken(), sdf.format(expireDate.getTime()), user.pseudonym);
+                provider.saveToken(user.GetToken(), sdf.format(expireDate.getTime()), user.pseudonym);
                 System.out.printf("user %s : %s\n", user.pseudonym, user.GetToken());
                 return Response
                         .status(Response.Status.OK)
@@ -176,7 +177,7 @@ public class Service {
                         .header("Access-Control-Allow-Origin", corsOrigin)
                         .build();
             }
-            Date expireDate = StorageProviderMongoDB.retrieveTokenExpireDate(pseudonym, token);
+            Date expireDate = provider.retrieveTokenExpireDate(pseudonym, token);
             if (expireDate != null) {
                 Calendar cal = Calendar.getInstance();
                 if (cal.getTime().before(expireDate)) {
@@ -199,7 +200,7 @@ public class Service {
                     }
                 } else {
                     // Token has expired
-                    StorageProviderMongoDB.deleteToken(token);
+                    provider.deleteToken(token);
                 }
             }
 

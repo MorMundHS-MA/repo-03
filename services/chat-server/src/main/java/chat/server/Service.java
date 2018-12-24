@@ -1,30 +1,20 @@
 package chat.server;
 
+import com.mongodb.MongoClientURI;
+import com.sun.grizzly.http.SelectorThread;
+import com.sun.jersey.api.container.grizzly.GrizzlyWebContainerFactory;
+import org.json.JSONArray;
+import org.json.JSONException;
+import services.common.AuthenticationProvider;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.*;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.OPTIONS;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-
-import com.sun.grizzly.http.SelectorThread;
-import com.sun.jersey.api.container.grizzly.GrizzlyWebContainerFactory;
-import org.json.JSONArray;
-import org.json.JSONException;
-import services.common.StorageException;
 
 /**
  * Provides a basic REST chat server.
@@ -35,13 +25,27 @@ public class Service {
     /**
      * String for date parsing in ISO 8601 format.
      */
-    public static final String ISO8601 = "yyyy-MM-dd'T'HH:mm:ssZ";
+    static final String ISO8601 = "yyyy-MM-dd'T'HH:mm:ssZ";
     private static SelectorThread threadSelector = null;
 
-    private final static Map<String, User> authCache = new ConcurrentHashMap<>();
-    private static boolean useAuthCaching;
+    private static StorageProviderMongoDB provider;
+    private static AuthenticationProvider auth;
+    public Service() {
 
-    public static void main(String[] args) throws Exception {
+    }
+
+    /**
+     * Dependency injection for unit testing.
+     * @param provider Storage provider used for persistence.
+     * @param auth Authentication provider for user authentication.
+     */
+    public Service(StorageProviderMongoDB provider, AuthenticationProvider auth) {
+        // Not nice but using a real dependency injection framework is out of scope for now.
+        Service.provider = provider;
+        Service.auth = auth;
+    }
+
+    public static void main(String[] args) {
         try {
             Config.init(args);
         } catch (Exception e) {
@@ -49,41 +53,29 @@ public class Service {
             e.printStackTrace();
             System.exit(-1);
         }
-        
-        try {
-            StorageProviderMongoDB.init();
-        } catch (StorageException e) {
-            System.out.println("Storage provider already initialized.");
-        }
-        useAuthCaching = Config.getSettingValue(Config.useAuthCache).equals("true");
-        if (!useAuthCaching) {
-            System.out.println("Auth caching is disabled.");
-        }
+
+        provider = new StorageProviderMongoDB(new MongoClientURI(Config.mongoURI.value()), Config.dbName.value());
         startChatServer(Config.getSettingValue(Config.baseURI));
     }
 
     public static void startChatServer(String uri) {
-        final String baseUri = uri;
-        final String paket = "chat.server";
+        final String packet = "chat.server";
         final Map<String, String> initParams = new HashMap<String, String>();
 
-        initParams.put("com.sun.jersey.config.property.packages", paket);
+        initParams.put("com.sun.jersey.config.property.packages", packet);
         System.out.println("Starting grizzly...");
         try {
-            threadSelector = GrizzlyWebContainerFactory.create(baseUri, initParams);
-        } catch (IllegalArgumentException e) {
-            // TODO Auto-generated catch block
+            threadSelector = GrizzlyWebContainerFactory.create(uri, initParams);
+        } catch (IllegalArgumentException | IOException e) {
             e.printStackTrace();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            System.out.println("Failed to start grizzly!");
+            System.exit(-1);
         }
-        System.out.printf("Grizzly running at %s\n", baseUri);
+        System.out.printf("Grizzly running at %s\n", uri);
 
     }
 
     public static void stopChatServer() {
-        //System.exit(0);
         threadSelector.stopEndpoint();
     }
 
@@ -101,8 +93,8 @@ public class Service {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response send(String json) {
         try {
-            String corsOrigin = Config.getSettingValue(Config.corsAllowOrigin);
-            Message msg = null;
+            String corsOrigin = Config.corsAllowOrigin.value();
+            Message msg;
             try {
                 msg = Message.fromJson(json);
             } catch (ParseException e) {
@@ -112,10 +104,9 @@ public class Service {
                         .entity("Message was incomplete").build();
             }
 
-            if (msg != null && msg.to != null && msg.from != null &&
-                    msg.date != null && msg.text != null && msg.token != null) {
+            if (msg.to != null && msg.from != null && msg.date != null && msg.text != null && msg.token != null) {
                 if (authenticateUser(msg.token, msg.from) != null) {
-                    User receiver = new User(msg.to);
+                    User receiver = new User(provider, msg.to);
                     if (receiver.sendMessage(msg) == null) {
                         System.out.println("[/send] DB refused message.");
                         return Response.status(Response.Status.BAD_REQUEST)
@@ -278,24 +269,11 @@ public class Service {
                 .build();
     }
 
-    private static User authenticateUser(String token, String pseudonym) {
-        User cachedUser = authCache.get(pseudonym);
-        if (cachedUser != null) {
-            if (cachedUser.authenticateUser(token)) {
-                return cachedUser;
-            } else {
-                // Failed to authenticate this user, token was definitely expired.
-                authCache.remove(token);
-                return null;
-            }
+    private User authenticateUser(String token, String pseudonym) {
+        if(auth.authenticateUser(token, pseudonym)) {
+            return new User(provider, pseudonym);
         } else {
-            User user = new User(pseudonym);
-            if (user.authenticateUser(token)) {
-                authCache.put(pseudonym, user);
-                return user;
-            }
+            return null;
         }
-
-        return null;
     }
 }

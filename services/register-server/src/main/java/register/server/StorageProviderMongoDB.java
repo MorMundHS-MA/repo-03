@@ -1,30 +1,22 @@
 package register.server;
 
+import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.ReturnDocument;
 import org.bson.BsonArray;
 import org.bson.Document;
-import services.common.StorageException;
 import services.common.StorageProviderCoreMongoDB;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.mongodb.client.model.Filters.*;
 import static com.mongodb.client.model.Updates.addToSet;
-import static com.mongodb.client.model.Updates.push;
 
 public class StorageProviderMongoDB extends StorageProviderCoreMongoDB {
-    private StorageProviderMongoDB() throws Exception {
-        super();
-    }
-
-    public static synchronized void init() throws StorageException {
-        StorageProviderCoreMongoDB.init(
-                Config.getSettingValue(Config.mongoURI),
-                Config.getSettingValue(Config.dbName));
+    public StorageProviderMongoDB(MongoClientURI uri, String database) {
+        super(uri, database);
     }
 
     /**
@@ -34,7 +26,7 @@ public class StorageProviderMongoDB extends StorageProviderCoreMongoDB {
      * @return Returns true if the user could be registered or false if the user already existed or invalid inforamtion
      * was provided.
      */
-    public static boolean createNewUser(User user) {
+    public boolean createNewUser(User user) {
         if (user.getEmail() == "" || user.getPseudonym() == "" || userExists(user.getPseudonym(), user.getEmail())) {
             return false;
         }
@@ -52,7 +44,7 @@ public class StorageProviderMongoDB extends StorageProviderCoreMongoDB {
      * @param name The users pseudonym.
      * @return Returns the users profile or null if the user could not be found.
      */
-    public static User getUserProfile(String name) {
+    public User getUserProfile(String name) {
         MongoCollection<Document> collection = database.getCollection(Config.getSettingValue(Config.dbAccountCollection));
         Document doc = collection.find(eq("pseudonym", name)).first();
         if (doc == null) {
@@ -70,7 +62,7 @@ public class StorageProviderMongoDB extends StorageProviderCoreMongoDB {
             }
         }
 
-        return new User(name, hashedPW, email, contacts);
+        return new User(this, name, hashedPW, email, contacts);
     }
 
     /**
@@ -80,7 +72,7 @@ public class StorageProviderMongoDB extends StorageProviderCoreMongoDB {
      * @param email The users email.
      * @return Returns true if a user with this email or pseudonym already exists.
      */
-    public static boolean userExists(String name, String email) {
+    public boolean userExists(String name, String email) {
         MongoCollection<Document> collection = database.getCollection(Config.getSettingValue(Config.dbAccountCollection));
         Document doc = collection.find(or(eq("pseudonym", name), eq("user", email))).first();
         return doc != null;
@@ -94,7 +86,7 @@ public class StorageProviderMongoDB extends StorageProviderCoreMongoDB {
      * @return Returns true if the contact was added to the contact list and false if invalid information was provided or
      * the user is already in the contact list
      */
-    public static boolean newContact(User user, String contactName) {
+    public boolean newContact(User user, String contactName) {
         if (contactName == "" || user.getPseudonym() == contactName) {
             return false;
         }
@@ -114,7 +106,7 @@ public class StorageProviderMongoDB extends StorageProviderCoreMongoDB {
         }
     }
 
-    public static void clearForTest() {
+    public void clearForTest() {
         deleteCollection(Config.getSettingValue(Config.dbAccountCollection));
     }
 }

@@ -1,5 +1,6 @@
 package login.server;
 
+import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoCollection;
 import org.bson.Document;
 import services.common.StorageException;
@@ -19,14 +20,8 @@ import static com.mongodb.client.model.Filters.eq;
  */
 public class StorageProviderMongoDB extends StorageProviderCoreMongoDB {
 
-    private StorageProviderMongoDB() throws Exception {
-        super();
-    }
-
-    public static synchronized void init() throws StorageException {
-        StorageProviderCoreMongoDB.init(
-                Config.getSettingValue(Config.mongoURI),
-                Config.getSettingValue(Config.dbName));
+    public StorageProviderMongoDB(MongoClientURI uri, String database) {
+        super(uri, database);
     }
 
     /**
@@ -36,7 +31,7 @@ public class StorageProviderMongoDB extends StorageProviderCoreMongoDB {
      * @param pseudonym The user's pseudonym.
      * @return Returns the user's data or null if the user wasn't found.
      */
-    public static User retrieveUser(String username, String pseudonym) {
+    public User retrieveUser(String username, String pseudonym) {
 
         MongoCollection<Document> collection = database.getCollection(Config.getSettingValue(Config.dbAccountCollection));
         Document doc;
@@ -61,7 +56,7 @@ public class StorageProviderMongoDB extends StorageProviderCoreMongoDB {
      * @param expirationDate The tokens expire date.
      * @param pseudonym      The users pseudonym.
      */
-    public static void saveToken(String token, String expirationDate, String pseudonym) {
+    public void saveToken(String token, String expirationDate, String pseudonym) {
 
         MongoCollection<Document> collection = database.getCollection(Config.getSettingValue(Config.dbTokenCollection));
 
@@ -83,7 +78,7 @@ public class StorageProviderMongoDB extends StorageProviderCoreMongoDB {
      * @param token     The user's current token.
      * @return The token's expiration date or null if the token was not found or is expired.
      */
-    public static Date retrieveTokenExpireDate(String pseudonym, String token) {
+    public Date retrieveTokenExpireDate(String pseudonym, String token) {
         MongoCollection<Document> collection = database.getCollection(Config.getSettingValue(Config.dbTokenCollection));
         // Retreive the tokeninformation
         Document doc = collection.find(and(eq("pseudonym", pseudonym), eq("token", token))).first();
@@ -111,7 +106,7 @@ public class StorageProviderMongoDB extends StorageProviderCoreMongoDB {
         else
             System.out.printf("User %s's token has expired for %f s.\n",
                     pseudonym,
-                    (currentTime.getTimeInMillis() - expireDate.getTimeInMillis())  / 1000f);
+                    (currentTime.getTimeInMillis() - expireDate.getTimeInMillis()) / 1000f);
         return null;
     }
 
@@ -120,12 +115,12 @@ public class StorageProviderMongoDB extends StorageProviderCoreMongoDB {
      *
      * @param token The token to remove.
      */
-    public static void deleteToken(String token) {
+    public void deleteToken(String token) {
         MongoCollection<Document> collection = database.getCollection(Config.getSettingValue(Config.dbTokenCollection));
         collection.deleteOne(eq("token", token));
     }
 
-    public static void clearForTest(User[] newUsers) {
+    public void clearForTest(User[] newUsers) {
         MongoCollection<Document> collection = deleteCollection(Config.getSettingValue(Config.dbAccountCollection));
         deleteCollection(Config.getSettingValue(Config.dbTokenCollection));
 
