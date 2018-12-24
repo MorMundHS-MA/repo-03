@@ -14,7 +14,6 @@ import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Provides a basic REST chat server.
@@ -71,7 +70,7 @@ public class Service {
             System.out.println("Failed to start grizzly!");
             System.exit(-1);
         }
-        System.out.printf("Grizzly running at %s\n", uri);
+        System.out.printf("Grizzly running at %s%n", uri);
 
     }
 
@@ -114,7 +113,7 @@ public class Service {
                                 .entity("Message was not correctly formatted").build();
                     }
                 } else {
-                    System.out.printf("[/send] Could not authenticate user %s with token %s\n", msg.from, msg.token);
+                    System.out.printf("[/send] Could not authenticate user %s with token %s%n", msg.from, msg.token);
                     return Response.status(Response.Status.UNAUTHORIZED)
                             .entity("Invalid Token")
                             .header("Access-Control-Allow-Origin", corsOrigin)
@@ -217,7 +216,7 @@ public class Service {
                     }
                 }
             } else {
-                System.out.printf("Could not authenticate user %s with token %s\n", userID, map.get("Authorization").get(0));
+                System.out.printf("Could not authenticate user %s with token %s%n", userID, map.get("Authorization").get(0));
                 return Response
                         .status(Response.Status.UNAUTHORIZED)
                         .header("Access-Control-Allow-Origin", corsOrigin)

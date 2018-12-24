@@ -6,7 +6,6 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.ReturnDocument;
 import org.bson.Document;
-import services.common.StorageException;
 import services.common.StorageProviderCoreMongoDB;
 
 import java.util.ArrayList;

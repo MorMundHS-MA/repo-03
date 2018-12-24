@@ -1,19 +1,7 @@
 package chat.server;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Queue;
-
-import javax.ws.rs.core.MediaType;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import com.sun.jersey.api.client.Client;
 
 /**
  * A chat user. Contains the user's name and information about his messages.
@@ -23,16 +11,6 @@ public class User {
     private static final boolean removeOldMessages = true;
     private String name;
     private StorageProviderMongoDB provider;
-
-    /**
-     * The user's token.
-     */
-    private String token;
-
-    /**
-     * The expiration date of the token.
-     */
-    private Date expireDate;
 
     /**
      * Creates a new user with the given name.
