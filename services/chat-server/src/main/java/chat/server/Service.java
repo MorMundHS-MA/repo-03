@@ -54,7 +54,8 @@ public class Service {
         }
 
         provider = new StorageProviderMongoDB(new MongoClientURI(Config.mongoURI.value()), Config.dbName.value());
-        startChatServer(Config.getSettingValue(Config.baseURI));
+        auth = new AuthenticationProvider(Config.loginURI.value());
+        startChatServer(Config.baseURI.value());
     }
 
     public static void startChatServer(String uri) {

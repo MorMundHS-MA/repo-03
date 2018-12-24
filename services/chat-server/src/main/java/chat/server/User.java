@@ -1,6 +1,5 @@
 package chat.server;
 
-import java.util.Date;
 import java.util.List;
 
 /**
