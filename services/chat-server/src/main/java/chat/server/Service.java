@@ -91,58 +91,37 @@ public class Service {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response send(String json) {
+        String corsOrigin = Config.corsAllowOrigin.value();
+        Message msg;
         try {
-            String corsOrigin = Config.corsAllowOrigin.value();
-            Message msg;
-            try {
-                msg = Message.fromJson(json);
-            } catch (ParseException e) {
-                System.out.println("[/send] Message was badly formatted");
-                return Response.status(Response.Status.BAD_REQUEST)
-                        .header("Access-Control-Allow-Origin", corsOrigin)
-                        .entity("Message was incomplete").build();
-            }
-
-            if (msg.to != null && msg.from != null && msg.date != null && msg.text != null && msg.token != null) {
-                if (authenticateUser(msg.token, msg.from) != null) {
-                    User receiver = new User(provider, msg.to);
-                    if (receiver.sendMessage(msg) == null) {
-                        System.out.println("[/send] DB refused message.");
-                        return Response.status(Response.Status.BAD_REQUEST)
-                                .header("Access-Control-Allow-Origin", corsOrigin)
-                                .entity("Message was not correctly formatted").build();
-                    }
-                } else {
-                    System.out.printf("[/send] Could not authenticate user %s with token %s%n", msg.from, msg.token);
-                    return Response.status(Response.Status.UNAUTHORIZED)
-                            .entity("Invalid Token")
-                            .header("Access-Control-Allow-Origin", corsOrigin)
-                            .build();
-                }
-                try {
-                    return Response.status(Response.Status.CREATED)
-                            .header("Access-Control-Allow-Origin", corsOrigin)
-                            .entity(msg.toJson(true).toString()).build();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    return Response
-                            .status(Response.Status.INTERNAL_SERVER_ERROR)
-                            .header("Access-Control-Allow-Origin", corsOrigin).build();
-                }
-            } else {
-                System.out.println("[/send] Message was incomplete");
-                return Response.status(Response.Status.BAD_REQUEST)
-                        .header("Access-Control-Allow-Origin", corsOrigin)
-                        .entity("Message was incomplete").build();
-            }
-        } catch (Exception e) {
-            System.out.printf("[/send] Unhandled exception  %s %s", json, e.getMessage());
-            e.printStackTrace();
-            return Response
-                    .status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .header("Access-Control-Allow-Origin", "*")
-                    .build();
+            msg = Message.fromJson(json);
+        } catch (ParseException e) {
+            System.out.println("[/send] Message was badly formatted");
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .header("Access-Control-Allow-Origin", corsOrigin)
+                    .entity("Message was incomplete").build();
         }
+
+        if (authenticateUser(msg.token, msg.from) == null) {
+            System.out.printf("[/send] Could not authenticate user %s with token %s%n", msg.from, msg.token);
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("Invalid Token")
+                    .header("Access-Control-Allow-Origin", corsOrigin)
+                    .build();
+
+        }
+
+        User receiver = new User(provider, msg.to);
+        if (receiver.sendMessage(msg) == null) {
+            System.out.println("[/send] DB refused message.");
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .header("Access-Control-Allow-Origin", corsOrigin)
+                    .entity("Message was not correctly formatted").build();
+        }
+
+        return Response.status(Response.Status.CREATED)
+                .header("Access-Control-Allow-Origin", corsOrigin)
+                .entity(msg.toJson(true).toString()).build();
     }
 
     /**
