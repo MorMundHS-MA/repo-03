@@ -5,6 +5,7 @@ import com.sun.grizzly.http.SelectorThread;
 import com.sun.jersey.api.container.grizzly.GrizzlyWebContainerFactory;
 import org.json.JSONArray;
 import org.json.JSONException;
+import services.common.AuthenticationProvider;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
@@ -27,9 +28,8 @@ public class Service {
     static final String ISO8601 = "yyyy-MM-dd'T'HH:mm:ssZ";
     private static SelectorThread threadSelector = null;
 
-    private final static Map<String, User> authCache = new ConcurrentHashMap<>();
     private static StorageProviderMongoDB provider;
-
+    private static AuthenticationProvider auth;
     public Service() {
 
     }
@@ -37,10 +37,12 @@ public class Service {
     /**
      * Dependency injection for unit testing.
      * @param provider Storage provider used for persistence.
+     * @param auth Authentication provider for user authentication.
      */
-    public Service(StorageProviderMongoDB provider) {
+    public Service(StorageProviderMongoDB provider, AuthenticationProvider auth) {
         // Not nice but using a real dependency injection framework is out of scope for now.
         Service.provider = provider;
+        Service.auth = auth;
     }
 
     public static void main(String[] args) {
@@ -267,24 +269,11 @@ public class Service {
                 .build();
     }
 
-    private static User authenticateUser(String token, String pseudonym) {
-        User cachedUser = authCache.get(pseudonym);
-        if (cachedUser != null) {
-            if (cachedUser.authenticateUser(token)) {
-                return cachedUser;
-            } else {
-                // Failed to authenticate this user, token was definitely expired.
-                authCache.remove(token);
-                return null;
-            }
+    private User authenticateUser(String token, String pseudonym) {
+        if(auth.authenticateUser(token, pseudonym)) {
+            return new User(provider, pseudonym);
         } else {
-            User user = new User(provider, pseudonym);
-            if (user.authenticateUser(token)) {
-                authCache.put(pseudonym, user);
-                return user;
-            }
+            return null;
         }
-
-        return null;
     }
 }

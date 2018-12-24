@@ -88,55 +88,6 @@ public class User {
     }
 
     /**
-     * Method to authenticate a user with his token.
-     *
-     * @return Returns true if the authentication was successful and false if
-     * not
-     */
-    public boolean authenticateUser(String token) {
-        SimpleDateFormat sdf = new SimpleDateFormat(Service.ISO8601);
-        if (this.token == token) {
-            if (sdf.format(new Date()).compareTo(expireDate.toString()) < 0) {
-                return true;
-            }
-        }
-
-        JSONObject obj = new JSONObject();
-        try {
-            obj.put("token", token);
-            obj.put("pseudonym", name);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        Client client = Client.create();
-        String response;
-        try {
-            response = client.resource(Config.getSettingValue(Config.loginURI) + "/auth").accept(MediaType.APPLICATION_JSON)
-                    .type(MediaType.APPLICATION_JSON).post(String.class, obj.toString());
-            client.destroy();
-        } catch (RuntimeException e) {
-            System.out.printf("Failed to authenticate user %s with token %s caused by : %s", this.getName(), token, e.getMessage());
-            return false;
-        }
-
-        JSONObject jo = new JSONObject(response);
-        if (jo.get("success").equals("true")) {
-            try {
-                this.expireDate = sdf.parse(jo.getString("expire-date"));
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-            return true;
-        }
-        System.out.printf(
-                "Failed to authenticate user %s with token %s. Auth server response did not indicate success",
-                this.getName(),
-                token);
-        return false;
-    }
-
-    /**
      * The user's name.
      */
     public String getName() {
