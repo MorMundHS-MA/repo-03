@@ -44,6 +44,10 @@ public enum Config {
         }
     }
 
+    public String value() {
+        return getSettingValue(this);
+    }
+
     public static String getSettingValue(Config key) {
         return settings.get(key.name()).get(0);
     }

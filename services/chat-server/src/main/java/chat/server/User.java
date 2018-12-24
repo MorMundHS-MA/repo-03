@@ -22,6 +22,7 @@ public class User {
 
     private static final boolean removeOldMessages = true;
     private String name;
+    private StorageProviderMongoDB provider;
 
     /**
      * The user's token.
@@ -36,9 +37,11 @@ public class User {
     /**
      * Creates a new user with the given name.
      *
-     * @param name The user's name.
+     * @param name            The user's name.
+     * @param storageProvider The storage provider used for persisting user messages.
      */
-    public User(String name) {
+    public User(StorageProviderMongoDB storageProvider, String name) {
+        this.provider = storageProvider;
         this.name = name;
     }
 
@@ -50,7 +53,7 @@ public class User {
      * @return The sent message with the correct sequence number.
      */
     public Message sendMessage(Message msg) {
-        int seq = StorageProviderMongoDB.addMessage(this, msg);
+        int seq = provider.addMessage(this, msg);
         if (seq == -1) {
             return null;
         }
@@ -69,7 +72,7 @@ public class User {
      * parameter.
      */
     public List<Message> receiveMessages(int sequenceNumber) {
-        List<Message> recvMsgs = StorageProviderMongoDB.getMessages(this, sequenceNumber);
+        List<Message> recvMsgs = provider.getMessages(this, sequenceNumber);
         if (recvMsgs == null) {
             return null;
         }
@@ -78,7 +81,7 @@ public class User {
         // messages from storage that
         // the client confirmed as received.
         if (User.removeOldMessages && sequenceNumber > 0) {
-            StorageProviderMongoDB.removeMessages(this, sequenceNumber);
+            provider.removeMessages(this, sequenceNumber);
         }
 
         return recvMsgs;

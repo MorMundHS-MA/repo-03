@@ -16,6 +16,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import com.mongodb.MongoClientURI;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -27,7 +28,8 @@ import services.common.StorageException;
 
 @Path("/")
 public class Service {
-    public static final String ISO8601 = "yyyy-MM-dd'T'HH:mm:ssZ";
+    private static final String ISO8601 = "yyyy-MM-dd'T'HH:mm:ssZ";
+    private static StorageProviderMongoDB provider;
 
     public static void main(String[] args) throws Exception {
         try {
@@ -38,12 +40,8 @@ public class Service {
             System.exit(-1);
         }
 
-        try {
-            StorageProviderMongoDB.init();
-        } catch (StorageException e) {
-            System.out.println("Storage provider already initialized.");
-        }
-        startRegistrationServer(Config.getSettingValue(Config.baseURI));
+        provider = new StorageProviderMongoDB(new MongoClientURI(Config.mongoURI.value()), Config.dbName.value());
+        startRegistrationServer(Config.baseURI.value());
     }
 
     public static SelectorThread startRegistrationServer(String uri) {
@@ -100,8 +98,8 @@ public class Service {
                         .build();
             }
 
-            User user = new User(pseudonym, password, email);
-            if (StorageProviderMongoDB.userExists(pseudonym, email)) {
+            User user = new User(provider, pseudonym, password, email);
+            if (provider.userExists(pseudonym, email)) {
                 System.out.printf("[/register] User %s was already registered and is potentially a teapot.\n", email);
                 return Response
                         .status(418)
@@ -109,7 +107,7 @@ public class Service {
                         .build();
             }
 
-            if (StorageProviderMongoDB.createNewUser(user)) {
+            if (provider.createNewUser(user)) {
                 JSONObject obj = new JSONObject();
                 obj.append("success", "true");
                 System.out.printf("[/register] Added new user %s. \n", email);
@@ -155,7 +153,7 @@ public class Service {
             }
 
             if (verifyToken(pseudonym, token)) {
-                User user = StorageProviderMongoDB.getUserProfile(pseudonym);
+                User user = provider.getUserProfile(pseudonym);
                 JSONObject obj = new JSONObject();
                 obj.append("name", user.getPseudonym());
                 obj.append("email", user.getEmail());
@@ -227,8 +225,8 @@ public class Service {
                         .header("Access-Control-Allow-Origin", corsOrigin)
                         .build();
             }
-            User user = StorageProviderMongoDB.getUserProfile(pseudonym);
-            User contact = StorageProviderMongoDB.getUserProfile(newContact);
+            User user = provider.getUserProfile(pseudonym);
+            User contact = provider.getUserProfile(newContact);
             if (user == null || contact == null) {
                 return Response
                         .status(Response.Status.BAD_REQUEST)

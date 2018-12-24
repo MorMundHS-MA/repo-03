@@ -1,5 +1,6 @@
 package chat.server;
 
+import com.mongodb.MongoClientURI;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
@@ -15,21 +16,16 @@ import java.util.function.Consumer;
 import static com.mongodb.client.model.Filters.*;
 import static com.mongodb.client.model.Updates.*;
 
-public class StorageProviderMongoDB extends StorageProviderCoreMongoDB {
+public class StorageProviderMongoDB extends StorageProviderCoreMongoDB{
 
     private static final int sequenceOffset = 1;
 
-    protected StorageProviderMongoDB() throws Exception {
+    public StorageProviderMongoDB(MongoClientURI uri, String database) {
+        super(uri, database);
     }
 
-    public static synchronized void init() throws StorageException {
-        StorageProviderCoreMongoDB.init(
-                Config.getSettingValue(Config.mongoURI),
-                Config.getSettingValue(Config.dbName));
-    }
-
-    public static int addMessage(User user, Message msg) {
-        if (user.getName() == null || user.getName().equals("")) return -1;
+    public int addMessage(User user, Message msg) {
+        if (user.getName() == null || user.getName().isEmpty()) return -1;
         if (!user.getName().equals(msg.to) || msg.from == null || msg.from.equals("") || msg.date == null) return -1;
         MongoCollection<Document> messages = database.getCollection(Config.getSettingValue(Config.dbChatCollection));
         MongoCollection<Document> sequences = database.getCollection(Config.getSettingValue(Config.dbSequenceCollection));
@@ -51,7 +47,7 @@ public class StorageProviderMongoDB extends StorageProviderCoreMongoDB {
         return msg.sequence;
     }
 
-    public static List<Message> getMessages(User user, int sequenceBegin) {
+    public List<Message> getMessages(User user, int sequenceBegin) {
         MongoCollection<Document> messages = database.getCollection(Config.getSettingValue(Config.dbChatCollection));
         MongoCollection<Document> sequences = database.getCollection(Config.getSettingValue(Config.dbSequenceCollection));
         if (user.getName() == null || user.getName().equals("")) return null;
@@ -75,7 +71,7 @@ public class StorageProviderMongoDB extends StorageProviderCoreMongoDB {
         return newMessages;
     }
 
-    public static boolean removeMessages(User user, int sequenceBegin) {
+    public boolean removeMessages(User user, int sequenceBegin) {
         MongoCollection<Document> messages = database.getCollection(Config.getSettingValue(Config.dbChatCollection));
         MongoCollection<Document> sequences = database.getCollection(Config.getSettingValue(Config.dbSequenceCollection));
         if (user.getName() == null || user.getName().equals("")) return false;
@@ -105,7 +101,7 @@ public class StorageProviderMongoDB extends StorageProviderCoreMongoDB {
                 msgDoc.getInteger("sequence"));
     }
 
-    public static void clearForTests() {
+    public void clearForTests() {
         deleteCollection(Config.getSettingValue(Config.dbChatCollection));
         deleteCollection(Config.getSettingValue(Config.dbSequenceCollection));
     }
